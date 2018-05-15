@@ -1,0 +1,12 @@
+register /usr/lib/pig/piggybank.jar
+define CSVExcelStorage org.apache.pig.piggybank.storage.CSVExcelStorage;
+
+a= load '/home/cloudera/Desktop/Consumer_Complaints.csv' using CSVExcelStorage();
+
+dat1= foreach a generate (chararray)$0 as Date,(chararray)$1 as Product;
+dat= filter dat1 by Product is NOT NULL;
+lst3yrs= filter dat by Date MATCHES '.*2017.*|.*2016.*|.*2015.*';
+gpprod= group lst3yrs by Product;
+prodissue= foreach gpprod generate group,COUNT(lst3yrs);
+x = filter prodissue by $1 >30;
+store x into '/home/cloudera/Desktop/ra2';

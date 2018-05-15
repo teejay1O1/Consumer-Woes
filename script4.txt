@@ -1,0 +1,18 @@
+register /usr/lib/pig/piggybank.jar
+
+define CSVExcelStorage org.apache.pig.piggybank.storage.CSVExcelStorage;
+a= load '/home/cloudera/Desktop/Consumer_Complaints.csv' using CSVExcelStorage();
+
+dat1= foreach a generate (chararray)$3 as Issue,(chararray)$7 as Company;
+dat= filter dat1 by Company is NOT NULL;
+gpcomp= group dat by Company;
+compissue= foreach gpcomp generate group,COUNT(dat.Issue);
+arr = order compissue by $1 DESC;
+lim = limit arr 3;
+limdat= foreach lim generate $0 as name;
+jn= JOIN limdat by name, dat by Company;
+jndat= foreach jn generate $0 as Company, $1 as Issue;
+gpcompissue= group jndat by (Company,Issue);
+final= foreach gpcompissue generate group,COUNT(jndat);
+store final into '/home/cloudera/Desktop/ra4';
+
